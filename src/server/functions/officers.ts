@@ -3,7 +3,6 @@ import { z } from 'zod'
 import { createAdminClient } from '@/server/lib/appwrite'
 import { authMiddleware } from '@/server/functions/auth'
 import { ID, Query } from 'node-appwrite'
-import { setResponseStatus } from '@tanstack/react-start/server'
 
 const DB_ID = process.env.APPWRITE_DB_ID!
 const BUCKET_ID = process.env.APPWRITE_BUCKET_ID!
@@ -88,11 +87,6 @@ export interface MessageDoc {
 function adminDb() {
   const { databases } = createAdminClient()
   return databases
-}
-
-function adminStorage() {
-  const { storage } = createAdminClient()
-  return storage
 }
 
 // ─── Officer CRUD ────────────────────────────────────────────────────────────
@@ -182,7 +176,7 @@ export const updateOfficerFn = createServerFn({ method: 'POST' })
   .inputValidator(
     z.object({
       docId: z.string(),
-      data: z.record(z.unknown()),
+      data: z.record(z.string(), z.unknown()),
     }),
   )
   .handler(async ({ data: payload }) => {
@@ -376,7 +370,7 @@ export const createTeamFn = createServerFn({ method: 'POST' })
 
 export const updateTeamFn = createServerFn({ method: 'POST' })
   .inputValidator(
-    z.object({ teamId: z.string(), data: z.record(z.unknown()) }),
+    z.object({ teamId: z.string(), data: z.record(z.string(), z.unknown()) }),
   )
   .handler(async ({ data: payload }) => {
     const { currentUser } = await authMiddleware()

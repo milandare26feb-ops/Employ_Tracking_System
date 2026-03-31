@@ -46,13 +46,26 @@ export default function ProfileSidebar({
   onUpdatePhoto,
 }: ProfileSidebarProps) {
   const [open, setOpen] = useState(false)
+  const [showNewPass, setShowNewPass] = useState(false)
+  const [showConfPass, setShowConfPass] = useState(false)
+  const [newPass, setNewPass] = useState('')
+  const [confPass, setConfPass] = useState('')
+  const [passSaved, setPassSaved] = useState(false)
   const [tab, setTab] = useState<'profile' | 'security'>('profile')
+
+  const handlePassChange = () => {
+    if (newPass.length < 6 || newPass !== confPass) return
+    setPassSaved(true)
+    setNewPass('')
+    setConfPass('')
+    setTimeout(() => setPassSaved(false), 2500)
+  }
 
   const avatarChar = name.charAt(0).toUpperCase()
 
   return (
     <>
-      {/* Trigger button */}
+      {/* Trigger button — fixed bottom-right */}
       <motion.button
         onClick={() => setOpen(true)}
         whileTap={{ scale: 0.92 }}
@@ -155,8 +168,70 @@ export default function ProfileSidebar({
                     {ROLE_LABEL[role]}
                   </span>
                 </div>
+                {companyName && (
+                  <p className="text-slate-600 text-[10px] mt-0.5">
+                    {companyName}
+                  </p>
+                )}
               </div>
             </div>
+
+            {/* Status badge (officer only) */}
+            {status && (
+              <div className="px-5 py-3 border-b border-[#1e2d4a]">
+                <div
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] font-['Rajdhani'] font-bold tracking-wide ${
+                    status === 'approved'
+                      ? 'bg-teal-500/10 border-teal-500/20 text-teal-400'
+                      : status === 'pending'
+                        ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                        : 'bg-red-500/10 border-red-500/20 text-red-400'
+                  }`}
+                >
+                  {status === 'approved' ? (
+                    <CheckCircle size={11} />
+                  ) : (
+                    <Clock size={11} />
+                  )}
+                  {status === 'approved'
+                    ? 'APPROVED'
+                    : status === 'pending'
+                      ? 'PENDING APPROVAL'
+                      : 'REJECTED'}
+                </div>
+              </div>
+            )}
+
+            {/* Check In / Out */}
+            {onCheckInOut && (
+              <div className="px-5 py-3 border-b border-[#1e2d4a] flex items-center justify-between">
+                <span className="text-slate-400 text-sm font-['Rajdhani'] font-semibold">
+                  Work Status
+                </span>
+                <div className="flex rounded-xl overflow-hidden border border-[#1e2d4a]">
+                  <button
+                    onClick={() => onCheckInOut('in')}
+                    className={`px-3 py-1.5 text-xs font-['Rajdhani'] font-bold transition-colors ${
+                      checkInStatus === 'in'
+                        ? 'bg-teal-500 text-[#0a0f1e]'
+                        : 'text-slate-500 hover:text-slate-300'
+                    }`}
+                  >
+                    CHECK IN
+                  </button>
+                  <button
+                    onClick={() => onCheckInOut('out')}
+                    className={`px-3 py-1.5 text-xs font-['Rajdhani'] font-bold transition-colors ${
+                      checkInStatus === 'out'
+                        ? 'bg-red-500/80 text-white'
+                        : 'text-slate-500 hover:text-slate-300'
+                    }`}
+                  >
+                    CHECK OUT
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Tabs */}
             <div className="flex border-b border-[#1e2d4a]">
@@ -178,6 +253,98 @@ export default function ProfileSidebar({
                   {t}
                 </button>
               ))}
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              {tab === 'profile' && (
+                <div className="space-y-3">
+                  <div className="bg-[#0d1425] border border-[#1e2d4a] rounded-2xl px-4 py-3">
+                    <label className="text-slate-500 text-[10px] uppercase tracking-widest font-['Rajdhani'] block mb-1.5">
+                      Full Name
+                    </label>
+                    <input
+                      defaultValue={name}
+                      className="w-full bg-transparent text-white text-sm font-['Rajdhani'] focus:outline-none"
+                    />
+                  </div>
+                  <div className="bg-[#0d1425] border border-[#1e2d4a] rounded-2xl px-4 py-3">
+                    <label className="text-slate-500 text-[10px] uppercase tracking-widest font-['Rajdhani'] block mb-1.5">
+                      Email
+                    </label>
+                    <input
+                      defaultValue={email}
+                      type="email"
+                      className="w-full bg-transparent text-slate-400 text-sm font-['Rajdhani'] focus:outline-none"
+                    />
+                  </div>
+                  <button className="w-full py-3 bg-teal-500/10 border border-teal-500/20 hover:bg-teal-500/20 text-teal-400 rounded-2xl text-xs font-['Rajdhani'] font-bold tracking-widest transition-colors flex items-center justify-center gap-2">
+                    <CheckCircle size={13} /> SAVE CHANGES
+                  </button>
+                </div>
+              )}
+
+              {tab === 'security' && (
+                <div className="space-y-3">
+                  <p className="text-slate-500 text-[11px] font-['Rajdhani'] uppercase tracking-wider">
+                    Change Password
+                  </p>
+
+                  <div className="relative">
+                    <input
+                      type={showNewPass ? 'text' : 'password'}
+                      value={newPass}
+                      onChange={(e) => setNewPass(e.target.value)}
+                      placeholder="New password"
+                      className="w-full bg-[#0d1425] border border-[#1e2d4a] rounded-xl px-4 pr-10 py-2.5 text-white text-sm font-['Rajdhani'] focus:outline-none focus:border-teal-500/50"
+                    />
+                    <button
+                      onClick={() => setShowNewPass(!showNewPass)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                    >
+                      {showNewPass ? <EyeOff size={13} /> : <Eye size={13} />}
+                    </button>
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      type={showConfPass ? 'text' : 'password'}
+                      value={confPass}
+                      onChange={(e) => setConfPass(e.target.value)}
+                      placeholder="Confirm new password"
+                      className="w-full bg-[#0d1425] border border-[#1e2d4a] rounded-xl px-4 pr-10 py-2.5 text-white text-sm font-['Rajdhani'] focus:outline-none focus:border-teal-500/50"
+                    />
+                    <button
+                      onClick={() => setShowConfPass(!showConfPass)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                    >
+                      {showConfPass ? <EyeOff size={13} /> : <Eye size={13} />}
+                    </button>
+                  </div>
+
+                  {confPass && newPass !== confPass && (
+                    <p className="text-red-400 text-xs font-['Rajdhani']">
+                      Passwords do not match
+                    </p>
+                  )}
+
+                  <button
+                    onClick={handlePassChange}
+                    disabled={newPass.length < 6 || newPass !== confPass}
+                    className="w-full py-3 bg-teal-500/10 border border-teal-500/20 hover:bg-teal-500/20 disabled:opacity-40 text-teal-400 rounded-2xl text-xs font-['Rajdhani'] font-bold tracking-widest transition-colors flex items-center justify-center gap-2"
+                  >
+                    {passSaved ? (
+                      <>
+                        <CheckCircle size={13} /> SAVED!
+                      </>
+                    ) : (
+                      <>
+                        <Lock size={13} /> UPDATE PASSWORD
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Sign Out */}

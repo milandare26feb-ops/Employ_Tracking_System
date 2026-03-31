@@ -129,6 +129,41 @@ export default function MessengerPanel({
     setText('')
   }
 
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mr = new MediaRecorder(stream)
+      chunksRef.current = []
+      mr.ondataavailable = (e) => chunksRef.current.push(e.data)
+      mr.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
+        stream.getTracks().forEach((t) => t.stop())
+        onSendVoice(blob, recordSeconds)
+        setRecordSeconds(0)
+      }
+      mr.start()
+      mediaRef.current = mr
+      setIsRecording(true)
+      timerRef.current = setInterval(() => setRecordSeconds((s) => s + 1), 1000)
+    } catch {
+      // mic not available
+    }
+  }, [onSendVoice, recordSeconds])
+
+  const stopRecording = useCallback(() => {
+    mediaRef.current?.stop()
+    if (timerRef.current) clearInterval(timerRef.current)
+    setIsRecording(false)
+  }, [])
+
+  const handleMediaCapture = useCallback(
+    async (file: File, type: 'image' | 'video') => {
+      const geo = await getCurrentGeo()
+      onSendMedia(file, type, geo)
+    },
+    [onSendMedia],
+  )
+
   return (
     <div className="flex flex-col h-full bg-[#0a0f1e]">
       {/* Header */}
@@ -138,7 +173,7 @@ export default function MessengerPanel({
             {chatTitle}
           </h3>
           <p className="text-teal-400/60 text-[10px] font-['JetBrains_Mono']">
-            {isGroupChat ? 'GROUP CHAT' : 'DIRECT MESSAGE'} · {messages.length}
+            {isGroupChat ? 'GROUP CHAT' : 'DIRECT MESSAGE'} · {messages.length}{' '}
             messages
           </p>
         </div>
@@ -187,11 +222,87 @@ export default function MessengerPanel({
                     : 'bg-[#0d1425] border border-[#1e2d4a] rounded-tl-sm'
                 }`}
               >
+                {/* Text */}
                 {msg.type === 'text' && msg.content && (
                   <p className="text-slate-200 text-sm font-['Rajdhani'] leading-relaxed">
                     {msg.content}
                   </p>
                 )}
+
+                {/* Voice */}
+                {msg.type === 'voice' && msg.fileUrl && (
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() =>
+                        setPlayingId(playingId === msg.id ? null : msg.id)
+                      }
+                      className="w-8 h-8 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-400"
+                    >
+                      {playingId === msg.id ? (
+                        <Pause size={14} />
+                      ) : (
+                        <Play size={14} />
+                      )}
+                    </button>
+                    <div className="flex-1">
+                      <div className="h-0.5 bg-[#1e2d4a] rounded-full relative">
+                        <div className="absolute inset-y-0 left-0 w-1/3 bg-teal-500 rounded-full" />
+                      </div>
+                    </div>
+                    <span className="text-slate-500 text-[10px] font-['JetBrains_Mono']">
+                      {msg.duration ? formatDuration(msg.duration) : '0:00'}
+                    </span>
+                  </div>
+                )}
+
+                {/* Image / Video */}
+                {(msg.type === 'image' || msg.type === 'video') &&
+                  msg.fileUrl && (
+                    <div className="space-y-1.5">
+                      <div className="rounded-xl overflow-hidden relative">
+                        {msg.type === 'image' ? (
+                          <img
+                            src={msg.fileUrl}
+                            className="max-w-[200px] max-h-[200px] object-cover rounded-xl"
+                            alt=""
+                          />
+                        ) : (
+                          <video
+                            src={msg.fileUrl}
+                            controls
+                            className="max-w-[200px] rounded-xl"
+                          />
+                        )}
+                        <a
+                          href={msg.fileUrl}
+                          download
+                          className="absolute top-1 right-1 w-6 h-6 bg-black/50 rounded-full flex items-center justify-center text-white"
+                        >
+                          <Download size={10} />
+                        </a>
+                      </div>
+                      {/* Geo + time tag */}
+                      {msg.geoLat !== undefined && (
+                        <div className="flex items-center gap-1 px-1">
+                          <MapPin size={9} className="text-teal-400" />
+                          <span className="text-slate-500 text-[9px] font-['JetBrains_Mono'] truncate">
+                            {msg.geoAddress}
+                          </span>
+                        </div>
+                      )}
+                      {msg.capturedAt && (
+                        <div className="flex items-center gap-1 px-1">
+                          <span className="text-slate-600 text-[9px] font-['JetBrains_Mono']">
+                            📸{' '}
+                            {new Date(msg.capturedAt).toLocaleString([], {
+                              dateStyle: 'short',
+                              timeStyle: 'short',
+                            })}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
               </div>
 
               <span
@@ -207,22 +318,47 @@ export default function MessengerPanel({
 
       {/* Input area */}
       <div className="flex-shrink-0 border-t border-[#1e2d4a] p-3 bg-[#080e1c]">
+        {/* Recording indicator */}
+        <AnimatePresence>
+          {isRecording && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="flex items-center gap-3 px-4 py-2.5 bg-red-500/10 border border-red-500/20 rounded-xl mb-2"
+            >
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              <span className="text-red-300 text-xs font-['Rajdhani'] font-semibold flex-1">
+                Recording voice... {formatDuration(recordSeconds)}
+              </span>
+              <button
+                onClick={stopRecording}
+                className="text-slate-400 hover:text-white"
+              >
+                <X size={14} />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="flex items-center gap-2">
+          {/* Media buttons */}
           <button
             onClick={() => imageInputRef.current?.click()}
             className="w-8 h-8 rounded-xl bg-[#1e2d4a] hover:bg-[#2a3a5a] flex items-center justify-center text-slate-400 hover:text-teal-400 transition-colors"
-            title="Send image"
+            title="Send image (live capture)"
           >
             <Image size={14} />
           </button>
           <button
             onClick={() => videoInputRef.current?.click()}
             className="w-8 h-8 rounded-xl bg-[#1e2d4a] hover:bg-[#2a3a5a] flex items-center justify-center text-slate-400 hover:text-teal-400 transition-colors"
-            title="Send video"
+            title="Send video (live capture)"
           >
             <Video size={14} />
           </button>
 
+          {/* Text input */}
           <div className="flex-1 relative">
             <input
               value={text}
@@ -233,6 +369,7 @@ export default function MessengerPanel({
             />
           </div>
 
+          {/* Voice / Send */}
           {text.trim() ? (
             <button
               onClick={sendText}
@@ -242,32 +379,43 @@ export default function MessengerPanel({
             </button>
           ) : (
             <button
-              className="w-9 h-9 rounded-xl bg-[#1e2d4a] hover:bg-[#2a3a5a] flex items-center justify-center text-slate-400 hover:text-teal-400"
+              onPointerDown={startRecording}
+              onPointerUp={stopRecording}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
+                isRecording
+                  ? 'bg-red-500 text-white'
+                  : 'bg-[#1e2d4a] hover:bg-[#2a3a5a] text-slate-400 hover:text-teal-400'
+              }`}
               title="Hold to record voice"
             >
-              <Mic size={15} />
+              {isRecording ? <MicOff size={15} /> : <Mic size={15} />}
             </button>
           )}
         </div>
 
+        {/* Hidden file inputs — capture only */}
         <input
           ref={imageInputRef}
           type="file"
           accept="image/*"
+          capture="environment"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0]
-            if (file) e.target.value = ''
+            if (file) void handleMediaCapture(file, 'image')
+            e.target.value = ''
           }}
         />
         <input
           ref={videoInputRef}
           type="file"
           accept="video/*"
+          capture="environment"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0]
-            if (file) e.target.value = ''
+            if (file) void handleMediaCapture(file, 'video')
+            e.target.value = ''
           }}
         />
       </div>

@@ -182,7 +182,7 @@ interface PreloadResult {
  * Check if a file is eligible for preloading based on configured patterns
  */
 function isFileEligibleForPreloading(relativePath: string): boolean {
-  const fileName = relativePath.split(/[\/\\]/).pop() ?? relativePath
+  const fileName = relativePath.split(/[/\\]/).pop() ?? relativePath
 
   // If include patterns are specified, file must match at least one
   if (INCLUDE_PATTERNS.length > 0) {

@@ -106,7 +106,7 @@ VITE_INSTRUMENTATION_SCRIPT_SRC=
 #### Required Environment Variables:
 
 | Variable | Description | Example |
-|----------|-------------|---------|  
+|----------|-------------|---------|
 | `VITE_APPWRITE_ENDPOINT` | Your Appwrite instance URL | `https://sgp.cloud.appwrite.io/v1` |
 | `VITE_APPWRITE_PROJECT_ID` | Appwrite Project ID | `69cb0dd10032c979e8b7` |
 | `VITE_APPWRITE_DB_ID` | Database ID in Appwrite | `imagine-project-db` |
