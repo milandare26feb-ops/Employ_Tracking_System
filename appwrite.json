@@ -1,0 +1,79 @@
+{
+  "projectId": "69972ed4001c0b3493d8",
+  "settings": {
+    "services": {
+      "account": true,
+      "avatars": true,
+      "databases": true,
+      "locale": true,
+      "health": true,
+      "storage": true,
+      "teams": true,
+      "users": true,
+      "sites": true,
+      "functions": true,
+      "graphql": true,
+      "messaging": true
+    },
+    "auth": {
+      "methods": {
+        "jwt": true,
+        "phone": true,
+        "invites": true,
+        "anonymous": true,
+        "email-otp": true,
+        "magic-url": true,
+        "email-password": true
+      },
+      "security": {
+        "duration": 31536000,
+        "limit": 0,
+        "sessionsLimit": 10,
+        "passwordHistory": 0,
+        "passwordDictionary": false,
+        "personalDataCheck": false,
+        "sessionAlerts": false,
+        "mockNumbers": []
+      }
+    }
+  },
+  "projectName": "Real-Time Marketing Officer Tracking System",
+  "functions": [],
+  "sites": [
+    {
+      "$id": "project-69972ed4001c0b3493d8",
+      "name": "Real-Time Marketing Officer Tracking System",
+      "path": "sites/Real-Time Marketing Officer Tracking System",
+      "framework": "nuxt",
+      "enabled": true,
+      "logging": false,
+      "timeout": 30,
+      "buildRuntime": "node-22",
+      "adapter": "ssr",
+      "installCommand": "",
+      "buildCommand": "",
+      "outputDirectory": "",
+      "fallbackFile": "",
+      "specification": "s-1vcpu-1gb"
+    }
+  ],
+  "databases": [],
+  "tables": [],
+  "collections": [],
+  "buckets": [
+    {
+      "$id": "69a536d00016021fece8",
+      "$permissions": [],
+      "fileSecurity": false,
+      "name": "Real-Time Marketing Officer Tracking System",
+      "enabled": true,
+      "maximumFileSize": 5000000000,
+      "allowedFileExtensions": [],
+      "compression": "none",
+      "encryption": true,
+      "antivirus": true
+    }
+  ],
+  "teams": [],
+  "topics": []
+}

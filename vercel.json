@@ -1,0 +1,13 @@
+{
+  "buildCommand": "bun run build",
+  "devCommand": "bun run dev",
+  "installCommand": "bun install",
+  "framework": "vite",
+  "outputDirectory": "dist",
+  "env": {
+    "VITE_APPWRITE_ENDPOINT": "https://sgp.cloud.appwrite.io/v1",
+    "VITE_APPWRITE_PROJECT_ID": "69cb0dd10032c979e8b7",
+    "VITE_APPWRITE_DB_ID": "imagine-project-db",
+    "VITE_APPWRITE_BUCKET_ID": "imagine-project-bucket"
+  }
+}
